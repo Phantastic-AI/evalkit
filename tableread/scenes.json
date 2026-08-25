@@ -1,0 +1,653 @@
+[
+  {
+    "id": "S1",
+    "act": 1,
+    "title": "Discovery by consequence",
+    "cast": ["Dana Reyes"],
+    "moment": "Hour one of Dana's first conference. She opens the call for speakers, setting nothing but a closing date. Days pass. Speakers submit. Nothing in the product has told her a reading period is coming — she only meets that fact as a consequence of a pile that now needs her attention.",
+    "direction": "Two screens, read one after the other: the program overview, then the pile. The finding lives in the gap between them — nowhere does either say a reading period is coming, or that Dana is currently the whole committee.",
+    "fixtureRecipe": "dana-day-one",
+    "surfaces": [
+      { "persona": "organizer", "url": "/admin/{slug}" },
+      { "persona": "organizer", "url": "/admin/{slug}/submissions" }
+    ],
+    "intents": {
+      "job": "See what has happened since the call opened, without knowing there is a reviewing arc coming at all.",
+      "nextAction": "Open the program overview she already knows how to find — not Reviews, which she has never seen."
+    },
+    "truths": [
+      "The round config has never been touched — no name, no dates — because Dana has never opened /reviews.",
+      "The submissions pile holds 8 rows, all undecided, none assigned.",
+      "The message table has zero rows for Dana on this event — nobody has told her anything about reviewing, because nothing has happened that would."
+    ],
+    "sbek": ["CFP-S1 (organizer.md maps: organizer story 0, learns-it's-coming)"],
+    "hats": ["novice"],
+    "expectedFindings": [
+      "The absence itself: nowhere between opening the call and watching eight proposals land does the product say a reading period is coming, that Dana is currently the whole committee, or where \"reviews\" even lives."
+    ]
+  },
+  {
+    "id": "L1",
+    "act": 1,
+    "title": "A typo'd address, filed under a name nobody owns",
+    "cast": ["Priya Osei"],
+    "moment": "Priya submitted a proposal into Dana's call. Her fingers slipped on the way in — priya.osie@example.org, not priya.osei@example.org — and the product never checked. Weeks later she tries to sign in with the address she actually owns.",
+    "direction": "One POST, no redirect: the sign-in page answers straight into its own response. The sentence on screen is identical to the one a total stranger would get.",
+    "fixtureRecipe": "reuse:S1",
+    "surfaces": [
+      { "persona": "priya-osei", "url": "/sign-in/link", "method": "POST", "body": { "email": "{realAddress}" } }
+    ],
+    "intents": {
+      "job": "Sign back in under her own, correctly-spelled address and find her proposal.",
+      "nextAction": "Ask for a mailed sign-in link — the only door /sign-in offers besides a password she never set."
+    },
+    "truths": [
+      "workflows/submit.ts's submitProposal keys a fresh `person` row on whatever email string arrived on the form — a typo and a real address are indistinguishable to that code.",
+      "index.ts's requestMagicLink answers \"If that address is in the system, a sign-in link is on its way.\" whether the guess is right or wrong (index.ts:383/393) — the same sentence a stranger sees."
+    ],
+    "sbek": [],
+    "hats": ["novice"],
+    "expectedFindings": [
+      "GHOST — no correction path exists anywhere in the product for a mistyped CFP address: no confirmation email at submit time, no \"claim this submission\" flow, nothing. The proposal sits, findable only by the wrong string, forever."
+    ]
+  },
+  {
+    "id": "L2",
+    "act": 1,
+    "title": "Which address did I use?",
+    "cast": ["Kwame Boateng", "Dana Reyes"],
+    "moment": "Kwame submitted under his work address weeks ago. Trying to sign back in from his phone, he guesses at his personal one instead — wrong, but the product cannot tell him so.",
+    "direction": "The same neutral sentence L1 already proved. This scene's own weight is on Dana's side: does she have any tool to find him and hand him a working link?",
+    "fixtureRecipe": "reuse:S1",
+    "surfaces": [
+      { "persona": "kwame-boateng", "url": "/sign-in/link", "method": "POST", "body": { "email": "{guessedWrongAddress}" } }
+    ],
+    "intents": {
+      "job": "Get back into the account holding his proposal, from whichever address turns out to be the right one.",
+      "nextAction": "Guess, fail silently, and — if the product offered it — ask Dana to look him up."
+    },
+    "truths": [
+      "The correct-security, brutal-UX sentence (index.ts:383/393) never distinguishes \"wrong guess\" from \"right guess, no inbox yet.\"",
+      "settings.ts's addToTeam is the organizer's only magic-link-minting form, and it only mints a link for a person who does NOT already exist (`if (res.invited === null) return res.said`) — a CFP submitter already has a person row, so inviting his address grants a role silently and hands back no link at all."
+    ],
+    "sbek": [],
+    "hats": ["novice"],
+    "expectedFindings": [
+      "GHOST — Dana has no \"look up a speaker by name, hand her a fresh link\" tool anywhere in admin. The one form that mints links (team/add) is scoped to granting reviewer/organizer standing, and refuses to mint anything for someone who already exists in the system — the exact shape of a CFP submitter."
+    ]
+  },
+  {
+    "id": "S2",
+    "act": 2,
+    "title": "The founder with a fresh call, no vocabulary",
+    "cast": ["Dana Reyes", "Marcus Udoh", "Sana Iqbal", "Theo Laurent"],
+    "moment": "The call has closed, a pile waited, and three names Dana trusts are her whole committee. She has never said \"round,\" \"scorecard,\" or \"blind\" in her life. First visit to the Reviewers view: she wants reading to start, not concepts first.",
+    "direction": "A bare hit — no q, no p, nothing dealt. Whole pile still undecided. Read for order (does \"start reading\" sit above the round/team-config furniture a three-name founder has no use for) and dialect (round, blind, scorecard — words that mean nothing to her yet).",
+    "fixtureRecipe": "dana-committee",
+    "surfaces": [{ "persona": "organizer", "url": "/admin/{slug}/reviews/reviewers" }],
+    "intents": {
+      "job": "Get her three reviewers reading, without learning the product's vocabulary first.",
+      "nextAction": "The hand-out form — how many readers per proposal, who's reading, press Assign them."
+    },
+    "truths": [
+      "reviewTeam returns 4 rows (Dana + 3 invited); team.length > 1, so whoReadsWhat renders the table branch, not the single-reviewer branch.",
+      "The pile is > 0, so handOutForm renders with \"N proposals are still undecided.\"",
+      "ev.roundConfig.name is unset, so the heading falls back to \"Round 1\" — a word Dana never chose."
+    ],
+    "sbek": [],
+    "hats": ["novice"],
+    "expectedFindings": [
+      "Documented finding: the Reviewers page fails on order and dialect for a first-time, three-name founder — \"committee,\" \"round,\" \"blind\" are none of them her words yet."
+    ]
+  },
+  {
+    "id": "X1",
+    "act": 2,
+    "title": "The deal lands",
+    "cast": ["Dana Reyes", "Marcus Udoh", "the speaker of proposal zero"],
+    "moment": "Dana hands the pile out. In the same instant: Marcus's queue fills, a message waits on his portal, and — this is the point of the scene — nothing on the speaker's own portal changes at all.",
+    "direction": "Three cuts, same beat: Dana's Reviewers view (assignments now visible), Marcus's queue and his own portal (the hand-out note), and the speaker's portal, read cold, unchanged. The constraint reviewer-experience.md states in words — \"Nothing reviewer-facing may reveal a decision before its letter goes out\" — is what this scene makes checkable.",
+    "fixtureRecipe": "reuse:S2",
+    "surfaces": [
+      { "persona": "organizer", "url": "/admin/{slug}/reviews/reviewers" },
+      { "persona": "marcus-udoh", "url": "/admin/{slug}/reviews" },
+      { "persona": "marcus-udoh", "url": "/{slug}/portal" },
+      { "persona": "speaker-of-proposal-zero", "url": "/{slug}/portal" }
+    ],
+    "intents": {
+      "job": "Dana: get reading started. Marcus: find out what landed on him. The speaker: unaware anything happened at all.",
+      "nextAction": "Marcus opens his queue; the speaker has nothing new to open."
+    },
+    "truths": [
+      "Marcus's assigned count in reviewTeam increases by his share of the round-robin (workflows/review.ts's handOutAssignments).",
+      "A message exists for Marcus with subject matching handOutBody's own shape — \"Proposals assigned to you\" (review.ts).",
+      "The speaker's portal carries no review-standing fact anywhere — her submission still reads Submitted, nothing more."
+    ],
+    "crossTruths": [
+      {
+        "personas": ["organizer", "marcus-udoh"],
+        "fact": "The instant Dana's hand-out lands, reviewTeam's assigned count for Marcus and the \"Proposals assigned to you\" message on his own portal are the same fact, read from two screens."
+      },
+      {
+        "personas": ["organizer", "speaker-of-proposal-zero"],
+        "fact": "Dana's own hand-out act changes nothing the speaker can read — her portal, captured in the same beat, carries no reviewer-facing standing at all (reviewer-experience.md's own constraint, made checkable)."
+      }
+    ],
+    "sbek": [],
+    "hats": ["novice"],
+    "expectedFindings": []
+  },
+  {
+    "id": "L3",
+    "act": 2,
+    "title": "Maya's invite never arrives",
+    "cast": ["Dana Reyes", "Maya Chen"],
+    "moment": "Dana invites a fourth reader. If Maya's address were real and the mail genuinely went to spam, what does Dana have left to hand her?",
+    "direction": "The synthetic half, proven live: the on-screen key link is findable, exactly where settings.ts's own comment says it would be — \"the link comes back on the screen either way.\" The real-domain half is asserted from the source, not captured, and it complicates that comment rather than confirming it.",
+    "fixtureRecipe": "reuse:S2",
+    "surfaces": [{ "persona": "organizer", "url": "{mayaInviteLandingUrl}" }],
+    "intents": {
+      "job": "Dana: get a fourth reader a working way in, whatever her address turns out to be.",
+      "nextAction": "Read the settings page she landed on after the invite."
+    },
+    "truths": [
+      "settings.ts's team/add hands back `?key=<link>#team` in the redirect for an address isRealAddress() rejects — Maya's @example.org address, here, live.",
+      "The GET handler for /admin/:slug/settings reads that same `key` query param on any later visit and renders it (settings.ts:1253), so the link stays findable on a fresh visit to the same URL, not only in the instant after the invite."
+    ],
+    "sbek": [],
+    "hats": ["novice"],
+    "expectedFindings": [
+      "Code-grounded, not live-walkable: for a REAL address, settings.ts's own redirect construction is `emailed ? '&sent=1' : '&key=...'` — once an email attempt succeeds, the key is deliberately NOT also printed on screen (settings.ts:1481). If Maya's invite really were real-domain and really did land in spam, Dana would have no on-screen fallback at all — the opposite of what this scene's live half might suggest on its own. This fixture cannot exercise the real-domain path (it sends no real mail), so the asymmetry is recorded here rather than proven end to end."
+    ]
+  },
+  {
+    "id": "L4",
+    "act": 2,
+    "title": "The expired link on the couch",
+    "cast": ["Marcus Udoh"],
+    "moment": "A busy week; Marcus never got around to his first invite. He asks for a fresh sign-in link from his phone.",
+    "direction": "The request half, live: a working link prints straight onto the response page. The two-hour expiry itself is asserted from the source, not from a real clock running out.",
+    "fixtureRecipe": "reuse:S2",
+    "surfaces": [{ "persona": "marcus-udoh", "url": "/sign-in/link", "method": "POST", "body": { "email": "{marcusEmail}" } }],
+    "intents": {
+      "job": "Get back in without hunting for the first email.",
+      "nextAction": "Sign-in page's own \"Email me a sign-in link instead\" button."
+    },
+    "truths": [
+      "The expired-link page's actual copy is \"That link has expired. Ask for a fresh one below.\" (index.ts:430) — NOT labels.ts's own auth.link_expired string (\"That link has expired — they last two hours\"), which is defined and never read by any route (grepped dead across src/)."
+    ],
+    "sbek": [],
+    "hats": ["novice"],
+    "expectedFindings": [
+      "Not live-verified: the expiry itself would need a real two hours to pass or the session secret to forge a stale token, neither available to this harness. Asserted from index.ts:425-431 alone.",
+      "A live, checkable asymmetry: the synthetic on-screen link this fixture CAN prove carries no expiry warning text at all — \"two hours\" only ever appears in the emailed text body (index.ts:391), which a synthetic @example.org address never receives.",
+      "The expired-link page reuses signInPage() whole, so \"ask for a fresh one below\" is not a dead end — the same \"Email me a sign-in link instead\" button that got Marcus his link the first time sits right there. This is a working affordance, not a ghost — recorded here because the coordinator's original framing assumed it without the code check; the check confirms it, structurally."
+    ]
+  },
+  {
+    "id": "P1",
+    "act": 2,
+    "title": "Topics paired with tracks at setup time",
+    "cast": ["Priya Anand", "Yuki Tanaka", "Bram Voss"],
+    "moment": "Priya's conference had topics decided before a single proposal existed. She paired trusted readers with tracks in her head at setup time, and wants the product to restate that pairing, not make her redo it.",
+    "direction": "Pro cutaway — Systems Summit 2027, a different conference from Dana's, visited on purpose for the contrast. Read the groups panel: does this page look like it already knows the plan she made?",
+    "fixtureRecipe": "priya-topics",
+    "surfaces": [{ "persona": "organizer", "url": "/admin/{slug}/reviews/reviewers" }],
+    "intents": {
+      "job": "See the Platform/Product pairing she already decided, restated rather than rebuilt.",
+      "nextAction": "Read the groups panel; deal to one group without touching the other track."
+    },
+    "truths": [
+      "Two ReviewerGroup rows exist, one bound to each track.",
+      "handOutForm's group select offers \"Platform readers · Platform\" and \"Product readers · Product\" next to \"Everyone.\"",
+      "Dealing to a group reaches only that group's current members, read fresh at the moment of dealing (handOutForm's own line)."
+    ],
+    "sbek": [],
+    "hats": ["pro"],
+    "expectedFindings": [
+      "Documented finding, screenshot-catchable: group card visual illegibility on first read.",
+      "Documented finding: the group silently overrides the individual reviewer checkboxes — handOutForm's own copy says \"used only when dealing to Everyone,\" but nothing on the form visibly marks the checkboxes inert once a group is chosen."
+    ]
+  },
+  {
+    "id": "R1",
+    "act": 2,
+    "title": "Invited",
+    "cast": ["Renata Cole", "Lena Fischer"],
+    "moment": "Renata, alone on her own committee, invites her first reviewer.",
+    "direction": "Pro cutaway — Signal Conf 2027. Before the invite, reviewTeam has exactly one row: herself. The redirect carries key=, not sent=1 — no email was attempted for Lena's synthetic address.",
+    "fixtureRecipe": "renata-lena",
+    "surfaces": [{ "persona": "organizer", "url": "{lenaInviteLandingUrl}" }],
+    "intents": {
+      "job": "Get her first reader a way in.",
+      "nextAction": "The invite form on the single-reviewer branch of whoReadsWhat — \"You are currently the only reviewer.\""
+    },
+    "truths": [
+      "Before the invite, reviewTeam(saga-rev-lena) has exactly 1 row.",
+      "After, it has 2; Lena's row shows 0 assigned.",
+      "The redirect carries key=<link>, not sent=1 — no email was attempted."
+    ],
+    "sbek": ["CFP-S3 (organizer.md maps: organizer story 1, gets-help — provisioning)"],
+    "hats": ["pro"],
+    "expectedFindings": []
+  },
+  {
+    "id": "R2",
+    "act": 2,
+    "title": "First sign-in",
+    "cast": ["Lena Fischer"],
+    "moment": "Lena opens Fireside for the first time, following the link Renata handed her. She lands somewhere. The question is where, and what it assumes she already knows.",
+    "direction": "ev.everything is false for a plain reviewer, so the Reviewers-view bareLanding redirect that catches an organizer's own bare hit never fires for her — she never sees a tab strip at all.",
+    "fixtureRecipe": "reuse:R1",
+    "surfaces": [{ "persona": "lena-fischer", "url": "/admin/{slug}/reviews" }],
+    "intents": {
+      "job": "Find out what she's here to do.",
+      "nextAction": "Nothing yet — her queue is empty; the empty-state branch is the whole page."
+    },
+    "truths": [
+      "No tab strip renders on her screen (reviewsTabs returns '' when !ev.everything) — confirms a plain reviewer has only My reviews and never sees a choice.",
+      "Her queue is empty (q.total === 0) — the empty-state branch renders.",
+      "No message exists for her yet — no hand-out has happened."
+    ],
+    "sbek": ["CFP-S3 (organizer.md maps: reviewer station first sign-in)"],
+    "hats": ["pro"],
+    "expectedFindings": []
+  },
+  {
+    "id": "R3",
+    "act": 2,
+    "title": "Reading",
+    "cast": ["Lena Fischer"],
+    "moment": "Lena now has a real queue: staged, autosaving, names hidden, submit still ahead of her. She wants to know her work is safe before she's ready to send it.",
+    "direction": "One card open and staged, not submitted — \"Staged — yours until you submit.\"",
+    "fixtureRecipe": "reuse:R1",
+    "surfaces": [{ "persona": "lena-fischer", "url": "/admin/{slug}/reviews" }],
+    "intents": {
+      "job": "Read and score without losing her work before she's ready to submit.",
+      "nextAction": "Stage a score; leave it unsubmitted."
+    },
+    "truths": [
+      "Her queue holds proposals matching the hand-out.",
+      "The staged proposal carries the chip \"Staged — yours until you submit.\"",
+      "ev.roundConfig.blind is true — the round line reads \"Names hidden while scoring.\""
+    ],
+    "sbek": ["ABS-S3 steps 1-6 (sbek-import.md maps: reviewer stations invited, first sign-in, reading)"],
+    "hats": ["pro"],
+    "expectedFindings": []
+  },
+  {
+    "id": "S4",
+    "act": 3,
+    "title": "The watcher",
+    "cast": ["Dana Reyes", "Marcus Udoh", "Sana Iqbal", "Theo Laurent"],
+    "moment": "Days into the round: Dana dealt the pile earlier, and she's anxious, checking in on a quiet Sunday. She wants to see what changed, not read the whole round again.",
+    "direction": "Read for change-and-exception, not inventory: does the screen say who is behind in one glance, or make her scan every row to find out?",
+    "fixtureRecipe": "reuse:S2",
+    "surfaces": [{ "persona": "organizer", "url": "/admin/{slug}/reviews/reviewers" }],
+    "intents": {
+      "job": "Find out who is behind without re-reading the whole round.",
+      "nextAction": "Scan for the one exception — Theo's row."
+    },
+    "truths": [
+      "Marcus and Sana show partial \"X scored of Y assigned\" progress.",
+      "Theo's row shows his assigned count with 0 completed, and a live \"Retract N unopened\" button (r.untouched > 0).",
+      "newArrivals renders: two undecided proposals with no reviewer this round, landed after the last hand-out."
+    ],
+    "sbek": [],
+    "hats": ["novice"],
+    "expectedFindings": [
+      "This station's own test: restating everyone (Marcus's progress, Sana's progress, and Theo's) is the inventory failure the story exists to catch — the honest answer to \"is anyone behind\" names only Theo."
+    ]
+  },
+  {
+    "id": "R4",
+    "act": 3,
+    "title": "Deadline approaching",
+    "cast": ["Lena Fischer"],
+    "moment": "Days from the round's close, Lena checks her queue again. The one fact the product actually has — a close date — sits quietly at the top. Nothing else marks the approach.",
+    "direction": "Read for whether anything on this screen, or reachable from it, prompts her before the date arrives, or only states it passively.",
+    "fixtureRecipe": "reuse:R1",
+    "surfaces": [{ "persona": "lena-fischer", "url": "/admin/{slug}/reviews" }],
+    "intents": {
+      "job": "Find out how much time she has left.",
+      "nextAction": "Nothing beyond reading the date — there is no reminder to act on."
+    },
+    "truths": [
+      "dueChip(ev.roundConfig.closesAt) renders \"Closes {date}\" near the head of her queue.",
+      "No reminder message exists for her tied to the approaching close.",
+      "dueChip's own comment says it plainly: \"Display only — nothing here enforces a deadline.\""
+    ],
+    "sbek": [],
+    "hats": ["pro"],
+    "expectedFindings": [
+      "Documented gap: deadlines display-only. Station it anyway — the fixture's job is to make the walk feel the absence, not paper over it with an invented reminder."
+    ]
+  },
+  {
+    "id": "S5",
+    "act": 3,
+    "title": "The rescuer",
+    "cast": ["Dana Reyes", "Theo Laurent"],
+    "moment": "Near the round's close, Theo has gone silent. Dana must move his work to someone else without breaking anything — not his half-written drafts, not the trust of the pile, not what the act itself will say to him.",
+    "direction": "Two cuts, same beat: Dana's own Reviewers view after the take-back, and Theo's own portal — the interlock proves the exact copy her act promises is the exact copy that lands on him.",
+    "fixtureRecipe": "reuse:S2",
+    "surfaces": [
+      { "persona": "organizer", "url": "/admin/{slug}/reviews/reviewers" },
+      { "persona": "theo-laurent", "url": "/{slug}/portal" }
+    ],
+    "intents": {
+      "job": "Dana: move Theo's unopened work without losing anything he started or unsettling the pile. Theo: find out, later, what happened to his queue.",
+      "nextAction": "Dana presses Retract. Theo reads his portal, whenever he next looks."
+    },
+    "truths": [
+      "retractForm's own count matches what actually moves — Theo's started-but-unsubmitted rows, if any, are untouched after the act.",
+      "The proposals he held unopened return to the undecided, unassigned pile.",
+      "Theo receives a message: subject \"Assignments taken back\", body \"{N} unopened assignments were taken back — DevFlow 2027. Nothing you wrote was touched.\" (review.ts's exact TAKEBACK_SUBJECT / takeBackBody copy)."
+    ],
+    "crossTruths": [
+      {
+        "personas": ["organizer", "theo-laurent"],
+        "fact": "The retraction Dana sees confirmed on her own Reviewers view and the exact TAKEBACK_SUBJECT/takeBackBody copy on Theo's own portal are the same write, read from both sides of it in the same beat."
+      }
+    ],
+    "sbek": [],
+    "hats": ["novice"],
+    "expectedFindings": [
+      "Documented gap: nudge/retract safety opacity — the \"is this safe to click?\" pass is exactly what would surface it. Does the Retract button, on sight, say it only reaches work nobody opened — or does it read as \"take everything back\"?"
+    ]
+  },
+  {
+    "id": "R5",
+    "act": 3,
+    "title": "Unopened work retracted",
+    "cast": ["Renata Cole", "Lena Fischer"],
+    "moment": "Lena has gone quiet near the close. Renata retracts her unopened work. Lena, next time she looks, finds a note she never asked for.",
+    "direction": "Pro-hat pair to S5 — the same mechanic, read cold from the reviewer's own side rather than the chair's. Does the note explain what happened and why, or land as unexplained subtraction?",
+    "fixtureRecipe": "reuse:R1",
+    "surfaces": [
+      { "persona": "organizer", "url": "/admin/{slug}/reviews/reviewers" },
+      { "persona": "lena-fischer", "url": "/{slug}/portal" }
+    ],
+    "intents": {
+      "job": "Renata: free up the two proposals Lena never opened. Lena: find out why her count dropped.",
+      "nextAction": "Renata presses Retract. Lena reads her own portal."
+    },
+    "truths": [
+      "A message exists: subject \"Assignments taken back\", body \"2 unopened assignments were taken back — Signal Conf 2027. Nothing you wrote was touched.\"",
+      "Her assigned count in reviewTeam drops by 2; retractForm no longer shows a Retract button for her row (r.untouched === 0).",
+      "The freed proposals return to the undecided, unassigned pile."
+    ],
+    "sbek": [],
+    "hats": ["pro"],
+    "expectedFindings": []
+  },
+  {
+    "id": "X3",
+    "act": 4,
+    "title": "Letters release, every portal changes at once",
+    "cast": ["Dana Reyes", "two speakers"],
+    "moment": "Dana decides: one accepted, one declined. She releases the letters. In the same instant, both speakers' portals change — and, per the product's own rule, only because she took the second, deliberate step of releasing, not merely deciding.",
+    "direction": "Fills a real gap: sbek-import.md gap #1 names it directly — \"the graders' organizer story climaxes at decide-and-notify, ours stops at watching and rescuing.\" This scene is that station. Snap the outbox before release (staged, nothing sent yet), then both portals after.",
+    "fixtureRecipe": "reuse:S2",
+    "surfaces": [
+      { "persona": "organizer", "url": "/admin/{slug}/outbox" },
+      { "persona": "organizer", "url": "/admin/{slug}/submissions" },
+      { "persona": "accepted-speaker", "url": "/{slug}/portal" },
+      { "persona": "rejected-speaker", "url": "/{slug}/portal" }
+    ],
+    "intents": {
+      "job": "Dana: record both verdicts and tell both speakers, as two separate deliberate acts. Both speakers: find out where they stand.",
+      "nextAction": "Dana decides, then separately releases. Each speaker reads her own portal, nothing more."
+    },
+    "truths": [
+      "Both submissions carry distinct, persisted decisions (accepted / rejected) in the organizer's own submissions list before any letter goes out.",
+      "\"Changing status never auto-emails anyone\" (00-how-sessionboard-works.md line 83) — deciding and releasing are two separate deliberate steps, checkable as two separate writes in this scene's own sequence.",
+      "After release, the accepted speaker's portal reads Accepted and the rejected speaker's portal reads Rejected — nothing shared between the two."
+    ],
+    "crossTruths": [
+      {
+        "personas": ["accepted-speaker", "rejected-speaker"],
+        "fact": "One release act, two portals, read in the same beat: each speaker's own status changes and nobody else's status appears on either page — the letters land as two private facts, not one shared list."
+      },
+      {
+        "personas": ["organizer", "accepted-speaker"],
+        "fact": "Dana's submissions list and the accepted speaker's own portal agree on the same word (\"Accepted\") the instant the letter releases, not before."
+      }
+    ],
+    "sbek": ["CFP-S4 (CFP-12, CFP-13, CFP-14)"],
+    "hats": ["novice"],
+    "expectedFindings": []
+  },
+  {
+    "id": "T1",
+    "act": 4,
+    "title": "Say it the same way, every time",
+    "cast": ["Dana Reyes"],
+    "moment": "Dana is composing the same acceptance letter for the third time this week and wants it to say the same thing without retyping it.",
+    "direction": "The outbox screen she is looking at right now is the whole surface: stage a decision, write a note, release. Read for a saved-template picker, a named-template list, anything reusable — and find none.",
+    "fixtureRecipe": "reuse:S2",
+    "surfaces": [{ "persona": "organizer", "url": "/admin/{slug}/outbox" }],
+    "intents": {
+      "job": "Write an acceptance letter that reads the same way every time, without retyping it from scratch.",
+      "nextAction": "Look for a saved template, a placeholder picker, anything reusable."
+    },
+    "truths": [
+      "outbox.ts's own letter machinery (stageDecision, splitLetter, letterBody, the NOTE_MARK convention) composes a fresh, one-off note per decision — nothing here names, saves, or reuses a shape across sends.",
+      "workflows/crm.ts's fillTemplate — the closest relative in the whole product, supporting {{first_name}}/{{event}} placeholders for bulk CRM email — is typed fresh at send time too; it is not a saved, named, reusable template either."
+    ],
+    "sbek": [],
+    "hats": ["novice"],
+    "expectedFindings": [
+      "Gap R-3: no saved-template surface exists anywhere in the product — not for decision letters, and not even in the CRM's own placeholder-filling composer, which comes closest but still discards the shape after every send."
+    ]
+  },
+  {
+    "id": "T2",
+    "act": 4,
+    "title": "A template with placeholders",
+    "cast": ["Renata Cole"],
+    "moment": "Renata, composing a decision letter for the third conference she's chaired this year, expects what any mature tool would give her: a saved template, with placeholders, that she names once and reuses forever.",
+    "direction": "Pro-hat pair to T1 — same absence, higher expectation. The CRM's own {{first_name}}/{{event}} composer is the nearest thing the product has, and even that discards what she typed the moment the send completes.",
+    "fixtureRecipe": "reuse:R1",
+    "surfaces": [{ "persona": "organizer", "url": "/admin/{slug}/outbox" }],
+    "intents": {
+      "job": "Reuse a decision letter's shape across conferences without rebuilding it from memory each time.",
+      "nextAction": "Look for a template library — a named list she could pick from."
+    },
+    "truths": [
+      "Same absence as T1: no persisted, named, reusable template surface exists on this screen or reachable from it.",
+      "The CRM's fillTemplate mechanism (workflows/crm.ts) is the one place in the product that already knows how to fill {{tokens}} — but nothing calls it here, and even there the template itself is not saved."
+    ],
+    "sbek": [],
+    "hats": ["pro"],
+    "expectedFindings": [
+      "Gap R-3, pro framing: a chair running her third, fourth, fifth conference has the strongest claim on this feature, and the gap is identical to a first-timer's."
+    ]
+  },
+  {
+    "id": "R6",
+    "act": 4,
+    "title": "Round 2 opens with a new pile",
+    "cast": ["Renata Cole", "Lena Fischer"],
+    "moment": "Round 1 has sealed, round 2 is open, and a new pile has landed on Lena. Whether anything says so, or the queue simply changed underneath her.",
+    "direction": "Read the queue and the portal both, aimed at the portal specifically: does anything there say a new round started, or does the queue just have new proposals in it with no announcement?",
+    "fixtureRecipe": "reuse:R1",
+    "surfaces": [
+      { "persona": "lena-fischer", "url": "/admin/{slug}/reviews" },
+      { "persona": "lena-fischer", "url": "/{slug}/portal" }
+    ],
+    "intents": {
+      "job": "Find out whether this is a new batch or leftovers from before.",
+      "nextAction": "Read the queue's own round number; read the portal for any announcement."
+    },
+    "truths": [
+      "Round 1 is sealed: roundHistory shows it with current: false.",
+      "Her queue now reports round 2 (q.round === 2), with freshly assigned proposals.",
+      "The round-2 hand-out writes her a message — subject \"Proposals assigned to you\", body from handOutBody — the same as any hand-out; workflows/review.ts's handOutAssignments is round-agnostic, so a second round gets the same notification a first round does."
+    ],
+    "sbek": ["ABS-01, ABS-02 (sbek-import.md gap #2: two-plus rounds with per-round pools)"],
+    "hats": ["pro"],
+    "expectedFindings": []
+  },
+  {
+    "id": "V1",
+    "act": 5,
+    "title": "Alex arrives",
+    "cast": ["Alex Rivera"],
+    "moment": "A brand-new account, first conference. No event_role, no submission, no my_schedule row — afterSignIn sends Alex to the chooser, not the marketing page.",
+    "direction": "Snap the chooser itself, before Alex picks anything — the page a first-timer actually lands on.",
+    "fixtureRecipe": "attendee-arc",
+    "surfaces": [{ "persona": "alex", "url": "/welcome" }],
+    "intents": {
+      "job": "Find the conference Alex is actually here for.",
+      "nextAction": "Press the one card matching DevFlow 2027."
+    },
+    "truths": [
+      "index.ts's afterSignIn returns /welcome for a person with no event_role, no submission, and no my_schedule row anywhere.",
+      "welcomePage renders one <form> per open conference, the whole card the submit button — including conferences that are not Alex's own."
+    ],
+    "sbek": [],
+    "hats": ["novice"],
+    "expectedFindings": [
+      "Worth recording, not fixing: /welcome lists every open conference on the whole instance with no tenant scoping — a real, observed fact while building this scene (a same-named leftover conference from an earlier fixture run sorted ahead of a fresh one and required a disambiguating check to catch)."
+    ]
+  },
+  {
+    "id": "V2",
+    "act": 5,
+    "title": "Alex stars two talks",
+    "cast": ["Alex Rivera"],
+    "moment": "Two talks catch Alex's eye on the freshly published agenda. One tap each, and they line up on My schedule.",
+    "direction": "The public agenda's own per-card form, signed in — a real POST, not local storage.",
+    "fixtureRecipe": "reuse:V1",
+    "surfaces": [{ "persona": "alex", "url": "/{slug}/my-schedule" }],
+    "intents": {
+      "job": "Build a personal shortlist out of a whole published program.",
+      "nextAction": "My schedule → \"Find someone you met →\", already visible above the list."
+    },
+    "truths": [
+      "\"2 sessions starred\" reads exactly on My schedule, plus \"Add my schedule to calendar →\".",
+      "Both starred sessions render in time order under their day heading, each with a working [LINK] to its own public page."
+    ],
+    "sbek": [],
+    "hats": ["novice"],
+    "expectedFindings": []
+  },
+  {
+    "id": "V3",
+    "act": 5,
+    "title": "Share my schedule",
+    "cast": ["Alex Rivera"],
+    "moment": "Alex turns sharing on — the two-pass choice, the card that says in plain words what becomes visible before it offers the button.",
+    "direction": "The after state: \"You are on the list.\"",
+    "fixtureRecipe": "reuse:V1",
+    "surfaces": [{ "persona": "alex", "url": "/{slug}/my-schedule" }],
+    "intents": {
+      "job": "Be findable by other people going to the same talks, on Alex's own terms.",
+      "nextAction": "\"Take me off this list\" sits right there, one click, for later."
+    },
+    "truths": [
+      "\"You are on the list.\" and \"People going to the same talks can see your name, and the sessions you starred.\" read exactly on the page.",
+      "\"Take me off this list\" (social.revoke) renders as a live control, not a promise."
+    ],
+    "sbek": [],
+    "hats": ["novice"],
+    "expectedFindings": []
+  },
+  {
+    "id": "V4",
+    "act": 5,
+    "title": "Alex follows a speaker",
+    "cast": ["Alex Rivera", "a speaker"],
+    "moment": "One of Alex's starred talks has a speaker worth following past this one conference.",
+    "direction": "The follow control, from the speaker's own public page — a real relationship, so it needs an account, unlike a star.",
+    "fixtureRecipe": "reuse:V1",
+    "surfaces": [{ "persona": "alex", "url": "/{slug}/speakers/{speakerId}" }],
+    "intents": {
+      "job": "Keep track of a speaker's future talks past this one conference.",
+      "nextAction": "Nothing further on this page — the button now reads its own state back."
+    },
+    "truths": [
+      "\"Following ✓\" renders as a submitted, pressed button (aria-pressed=\"true\") in place of the earlier \"Follow {name}\" one."
+    ],
+    "sbek": [],
+    "hats": ["novice"],
+    "expectedFindings": []
+  },
+  {
+    "id": "V5",
+    "act": 5,
+    "title": "Finding someone you met",
+    "cast": ["Alex Rivera", "Nadia Brandt"],
+    "moment": "Alex remembers Nadia's name from a talk and searches for her — the operator's own ≤2-taps path: nav → My schedule → Find someone you met.",
+    "direction": "Search, then request. connect.ts's own matchCard form, no id ever typed by hand.",
+    "fixtureRecipe": "reuse:V1",
+    "surfaces": [{ "persona": "alex", "url": "/{slug}/connect?q=Nadia&note=sent" }],
+    "intents": {
+      "job": "Turn a name remembered from a talk into a real connection, pending her agreement.",
+      "nextAction": "Wait — nothing more Alex can do until Nadia answers."
+    },
+    "truths": [
+      "\"Sent. They will see it next time they look.\" (friend.done) renders after the request.",
+      "The request is not yet a friendship: Alex's own \"Your people\" list still reads \"Nobody yet.\""
+    ],
+    "sbek": [],
+    "hats": ["novice"],
+    "expectedFindings": []
+  },
+  {
+    "id": "V6",
+    "act": 5,
+    "title": "Nadia accepts — both see each other's stars",
+    "cast": ["Alex Rivera", "Nadia Brandt"],
+    "moment": "Nadia opens her own Find-someone page, sees Alex's request, and accepts it. In that same instant, both of their starred schedules open to each other — nothing else does.",
+    "direction": "The interlock the operator asked for: two personas, one beat. Nadia's accept, then both schedules, cut one after another.",
+    "fixtureRecipe": "reuse:V1",
+    "surfaces": [
+      { "persona": "nadia", "url": "/{slug}/connect?note=accepted" },
+      { "persona": "alex", "url": "/{slug}/connect/{nadiaId}/schedule" },
+      { "persona": "nadia", "url": "/{slug}/connect/{alexId}/schedule" }
+    ],
+    "intents": {
+      "job": "Nadia: accept someone she remembers meeting. Alex: see what Nadia is going to; Nadia: see what Alex is going to.",
+      "nextAction": "Either of them opens \"See their schedule\" from their own Your people list."
+    },
+    "truths": [
+      "\"They are one of your people now.\" (friend.accepted) renders on Nadia's page after accepting.",
+      "Alex's own /connect/:nadia/schedule shows Nadia's one starred talk.",
+      "Nadia's own /connect/:alex/schedule shows both of Alex's starred talks."
+    ],
+    "crossTruths": [
+      {
+        "personas": ["alex", "nadia"],
+        "fact": "One accept, read from both sides in the same beat: friendSchedule (queries/friends.ts) opens the same way for both of them at once — gated on the friendship alone, nothing else, and nothing shared before it existed (V5's own truth: Alex's list read \"Nobody yet\" right up until this accept)."
+      }
+    ],
+    "sbek": [],
+    "hats": ["novice"],
+    "expectedFindings": []
+  },
+  {
+    "id": "V7",
+    "act": 5,
+    "title": "Catching up on a missed talk",
+    "cast": ["Alex Rivera"],
+    "moment": "Alex wants to mark a starred talk as one they actually caught, or missed, and catch up on the ones they didn't.",
+    "direction": "The ghost. Read the starred talk's own public page cold: no \"Were you there?\", no \"Saw it\" / \"Missed it\", no \"Catch up\" anywhere on it — not gated behind the conference being over, simply never wired to any control at all.",
+    "fixtureRecipe": "reuse:V1",
+    "surfaces": [{ "persona": "alex", "url": "/{slug}/s/{sessionSlug}" }],
+    "intents": {
+      "job": "Record which starred talks were actually attended, and find a way to catch up on the rest.",
+      "nextAction": "None — there is no such control on this page or reachable from it."
+    },
+    "truths": [
+      "lib/labels.ts §1.14 defines 'star.unmarked' (\"Were you there?\"), 'star.watched' (\"Saw it\"), 'star.missed' (\"Missed it\"), and 'screen.catch_up' (\"Catch up\") — all four grepped dead across src/routes: zero call sites outside labels.ts itself.",
+      "The session's own live page renders only \"On your schedule\" (the star toggle) and the speaker block — nothing about attendance, watched state, or catching up."
+    ],
+    "sbek": [],
+    "hats": ["novice"],
+    "expectedFindings": [
+      "GHOST, the expected finding this scene exists to surface: Saw it / Missed it / Catch up is dead vocabulary, defined in the label map and wired to nothing. A goldfish reading this page cold will never find it, because it is not there to find."
+    ]
+  }
+]
