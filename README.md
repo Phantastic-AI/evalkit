@@ -48,9 +48,7 @@ persona, and the confusion.
   absence, which only expertise can see.
 
 A small model is the right instrument here, not a compromise: a stronger
-model figures the page out and defeats the test. One read costs a fraction
-of a cent; a full five-act screenplay, every scene, both hats, costs about
-a quarter.
+model figures the page out and defeats the test.
 
 ## Use it on your app
 
@@ -72,6 +70,37 @@ scene). The scene format, runner, renderer, and reader never change.
 - `goldfish/` — the cold reader and grader (`goldfish.mjs`). Needs
   `ANTHROPIC_API_KEY`; reads a capture or a screenshot.
 - `onboarding/` — the process for pointing all of this at your own app.
+
+## Costs, and controlling them
+
+Running the kit is nearly free; building the suite is where the money is.
+
+- **Fixture runs, captures, truth checks: no model involved.** Plain HTTP
+  against your staging plus string checks. Cost is your staging
+  infrastructure, usually nothing.
+- **Goldfish reads: the only per-run model cost.** One read is a few
+  thousand small-model tokens — a fraction of a cent per screen per hat.
+  A 26-scene screenplay, every scene, both hats, is roughly a quarter per
+  full pass. Rerunning after every change is the intended usage and is
+  priced to allow it.
+- **Authoring the suite: the dominant cost, paid once.** The onboarding
+  chain is hours of capable-model agent work (writing stories, grounding
+  an adapter, authoring scenes). Spend the strong model here, where
+  judgment lives; it is one-time, and every later pass rides on it.
+
+Controls that matter, in order:
+
+1. **Route models by step.** Strong model to author (steps 00–05), small
+   model to read (step 07), no model at all for 06. Never the reverse.
+2. **Reuse worlds.** Consecutive scenes on one timeline share one fixture;
+   the reference suite builds five worlds for 26 scenes, not 26.
+3. **Text before pixels.** Text reads catch copy diseases at the lowest
+   price; add screenshot reads (vision tokens cost more) only where layout
+   is the suspect.
+4. **Scope hats.** Every scene gets the novice; give the pro hat only to
+   scenes that declare it — absence-spotting is not needed on every screen.
+5. **Cap the blast radius.** Grade the scenes whose surfaces a change
+   touched; full passes are for releases, not every commit.
 
 ## Relation to capability harnesses
 
