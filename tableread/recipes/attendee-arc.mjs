@@ -20,6 +20,9 @@ export default async function attendeeArc({ p, snap }) {
   const { slug } = await p.createConference('DevFlow 2027', {
     slug: `saga-devflow-attendees-${stamp}`,
     tracks: [],
+    // Event dates match the name's year (see dana-day-one.mjs).
+    startsOn: '2027-11-25',
+    endsOn: '2027-11-26',
     // /welcome lists every open conference on the whole instance with no
     // tenant scoping, so "DevFlow 2027" alone is not a safe match once a
     // same-named fixture from an earlier run is still sitting on staging

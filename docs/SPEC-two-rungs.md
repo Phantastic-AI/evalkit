@@ -319,5 +319,9 @@ small human-labeled calibration set to measure grader drift.
 - 2026-08-26 — worlds are built once and played in; every scenario does
   not start from zero. Isolation is slice-scoped (per-walk mutable slice),
   not world-scoped; backbone rebuild is per suite run, never per repeat.
+- 2026-08-26 — from the first live walk: par is measured against resolved
+  control presses, never raw decision count. Scrolling a long page is how
+  reading works, not wandering; an honest 1-press CFP submit took 3
+  decisions (2 scrolls) and must score clean.
 - (earlier) — two score sets CAPABILITY/UX never blended; variance is
   signal; no frontier score; fixtures on staging through real flows only.

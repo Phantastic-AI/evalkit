@@ -31,6 +31,12 @@ export default async function danaDayOne({ p, snap }) {
   const { slug } = await p.createConference('DevFlow 2027', {
     slug: `saga-devflow-${stamp}`,
     tracks: [],
+    // Event dates match the name's year. The defaults (future(90)) land in
+    // the current year and a cold reader reads "DevFlow 2027" over 2026
+    // dates as a mistake — the first live goldfish walk spent its opening
+    // confusion on exactly that.
+    startsOn: '2027-11-25',
+    endsOn: '2027-11-26',
   });
 
   // The growing pile — six ordinary submissions standing in for "eight

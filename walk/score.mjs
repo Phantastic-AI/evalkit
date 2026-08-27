@@ -64,11 +64,16 @@ function baseUXScore(trace, steps) {
  *    path quality judged by how far over par it ran: >2x par caps at 60,
  *    >1.5x caps at 80. A walk that never finished at all is already scored
  *    low by baseUXScore's own unobserved-step handling and gets no separate
- *    path-quality cap on top of that. */
-function applyWanderingCap(rawScore, { stepsTaken, par, done, stuckReason }) {
+ *    path-quality cap on top of that.
+ *  - path length is controlPresses, not stepsTaken (operator ruling,
+ *    2026-08-26, from the first live walk: an honest 1-press CFP submit took
+ *    3 decisions because reading a long form means scrolling it — scrolls
+ *    are reading, not wandering). stepsTaken is the fallback for older walk
+ *    results that never recorded presses. */
+function applyWanderingCap(rawScore, { stepsTaken, controlPresses, par, done, stuckReason }) {
   if (stuckReason === 'loop') return Math.min(rawScore, 50);
   if (!done || !par) return rawScore;
-  const ratio = stepsTaken / par;
+  const ratio = (controlPresses ?? stepsTaken) / par;
   if (ratio > 2) return Math.min(rawScore, 60);
   if (ratio > 1.5) return Math.min(rawScore, 80);
   return rawScore;

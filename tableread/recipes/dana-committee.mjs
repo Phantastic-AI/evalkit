@@ -19,6 +19,9 @@ export default async function danaCommittee({ p, snap }) {
     slug: `saga-devflow-committee-${stamp}`,
     cfpClosesAt: pastDate(3),
     tracks: [],
+    // Event dates match the name's year (see dana-day-one.mjs).
+    startsOn: '2027-11-25',
+    endsOn: '2027-11-26',
   });
 
   // The pile — 24, matching organizer.md S2's own count ("standing in for

@@ -221,5 +221,11 @@ export async function walk(journey, options) {
     }
   }
 
-  return { trace, done, failureType, stuckReason, stepsTaken: trace.length, par: journey.par };
+  // controlPresses is what par is measured against (operator ruling,
+  // 2026-08-26): scrolling a long form is how reading works, not wandering —
+  // only resolved-and-executed controls count as path length. stepsTaken
+  // stays the full decision count (every goldfish read costs money and the
+  // budget watches it).
+  const controlPresses = trace.filter((r) => r.resolved?.ok).length;
+  return { trace, done, failureType, stuckReason, stepsTaken: trace.length, controlPresses, par: journey.par };
 }

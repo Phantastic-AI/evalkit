@@ -85,18 +85,27 @@ function looksConfused(nextAction) {
   return CONFUSION_PHRASES.some((phrase) => text.includes(phrase));
 }
 
+/** goldfish.mjs's own args() only accepts `--flag=value` tokens (its regex
+ *  is `^--([a-z]+)(?:=(.*))?$` — a bare `--hat novice` parses as hat=true
+ *  and the CLI rejects it). Pure so the offline tests can pin the shape;
+ *  the first live dry run caught exactly this bug. */
+export function buildGoldfishArgs({ imagePath, hat, persona, goal }) {
+  const args = [`--image=${imagePath}`, `--hat=${hat ?? 'novice'}`, `--persona=${persona ?? ''}`];
+  if (goal) args.push(`--goal=${goal}`);
+  return args;
+}
+
 /** The real goldfish() function walk/drive.mjs's DI contract expects:
  *  ({persona, hat, goal, image, step}) -> {answers, namedAction, confused}.
  *  `image` is whatever walk/adapters/screenshot-adapter.mjs handed back —
  *  written to a temp file only because goldfish.mjs's CLI takes a path, not
  *  a buffer; cleaned up unconditionally after the call. */
-export async function goldfishAdapter({ persona, hat, image }) {
+export async function goldfishAdapter({ persona, hat, goal, image }) {
   const dir = mkdtempSync(join(tmpdir(), 'evalkit-goldfish-'));
   const imagePath = join(dir, 'screen.png');
   try {
     writeFileSync(imagePath, Buffer.isBuffer(image) ? image : Buffer.from(image));
-    const args = ['--image', imagePath, '--hat', hat ?? 'novice', '--persona', persona ?? ''];
-    const result = await runGoldfish(args);
+    const result = await runGoldfish(buildGoldfishArgs({ imagePath, hat, persona, goal }));
     const answers = splitAnswers(result.answers);
     return { answers, namedAction: answers.nextAction, confused: looksConfused(answers.nextAction) };
   } finally {

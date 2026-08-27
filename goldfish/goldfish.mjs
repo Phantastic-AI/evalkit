@@ -63,6 +63,9 @@ async function main() {
   const hat = HATS[a.hat ?? 'novice'];
   if (!hat) throw new Error(`Unknown hat: ${a.hat}. Hats: ${Object.keys(HATS).join(', ')}`);
   const persona = a.persona ?? 'a person using this software for the first time';
+  // A walk carries the journey's goal in the user's own words (docs/
+  // SPEC-two-rungs.md, "The walk loop"); a plain scene read has none.
+  const goalLine = a.goal && a.goal !== true ? `\n\nYour goal right now: ${a.goal}` : '';
   const intents = a.intents ? JSON.parse(a.intents) : null;
 
   let content;
@@ -73,7 +76,7 @@ async function main() {
     if (!media) throw new Error('Image must be png/jpg/webp.');
     content = [
       { type: 'image', source: { type: 'base64', media_type: media, data: readFileSync(a.image).toString('base64') } },
-      { type: 'text', text: `You are ${persona}. ${hat}\n\nThe image is exactly what you see on screen.\n\n${QUESTIONS}` },
+      { type: 'text', text: `You are ${persona}. ${hat}${goalLine}\n\nThe image is exactly what you see on screen.\n\n${QUESTIONS}` },
     ];
   } else if (a.capture) {
     const text = readFileSync(a.capture, 'utf8');
@@ -81,7 +84,7 @@ async function main() {
       {
         type: 'text',
         text:
-          `You are ${persona}. ${hat}\n\nThis is the page you see (links are [LINK: x], ` +
+          `You are ${persona}. ${hat}${goalLine}\n\nThis is the page you see (links are [LINK: x], ` +
           `buttons are [BUTTON: x]; text order is page order):\n\n---\n${text}\n---\n\n${QUESTIONS}`,
       },
     ];
