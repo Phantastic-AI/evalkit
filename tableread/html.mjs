@@ -135,6 +135,124 @@ export function firstRealOption(options) {
   return undefined;
 }
 
+function isDisabled(a) {
+  return 'disabled' in a || (a['aria-disabled'] ?? '').toLowerCase() === 'true';
+}
+
+/** true when a fixture directly says a control is hidden (a `hidden`
+ *  attribute, `aria-hidden="true"`, or an inline `display:none`);
+ *  undefined otherwise — "not marked hidden" is not the same claim as
+ *  "visible" once off-viewport bounds enter the picture (walk/resolver.mjs
+ *  is what turns this plus a viewport into an actual visibility verdict). */
+function isMarkedHidden(a) {
+  if ('hidden' in a) return true;
+  if ((a['aria-hidden'] ?? '').toLowerCase() === 'true') return true;
+  if (/display\s*:\s*none/i.test(a['style'] ?? '')) return true;
+  return undefined;
+}
+
+/** Pixel bounds from a `data-bounds="top,left,width,height"` attribute, the
+ *  one place this hand-rolled extraction can learn a control's on-page
+ *  position — there is no layout engine here, so real CSS box geometry is
+ *  out of reach; a fixture (or a future screenshot-driven capture step)
+ *  stamps this attribute explicitly instead. Returns undefined, never a
+ *  guess, when the attribute is absent or malformed. */
+function parseBounds(a) {
+  const raw = a['data-bounds'];
+  if (!raw) return undefined;
+  const parts = raw.split(',').map((s) => Number(s.trim()));
+  if (parts.length !== 4 || parts.some((n) => Number.isNaN(n))) return undefined;
+  const [top, left, width, height] = parts;
+  return { top, left, width, height };
+}
+
+/** Every clickable control on a page a walk's action resolver could name:
+ *  links, buttons, and submit/button/reset inputs, each with its label,
+ *  form context (the action/method it would submit against, when it's
+ *  inside a `<form>`), disabled state, and — only where directly
+ *  parseable, see isMarkedHidden/parseBounds above — a hidden flag and
+ *  pixel bounds. Distinct from findForms' extractFields: that reads a
+ *  form's data fields as a browser would submit them; this reads the
+ *  clickable surface a person actually presses. */
+export function extractControls(html) {
+  const controls = [];
+  let index = 0;
+
+  const formRanges = [];
+  const formRe = /<form\b([^>]*)>([\s\S]*?)<\/form>/gi;
+  let fm;
+  while ((fm = formRe.exec(html))) {
+    const a = parseAttrs(fm[1]);
+    formRanges.push({
+      start: fm.index,
+      end: fm.index + fm[0].length,
+      action: a['action'] ?? '',
+      method: (a['method'] ?? 'GET').toUpperCase(),
+    });
+  }
+  const formAt = (pos) => formRanges.find((f) => pos >= f.start && pos < f.end);
+
+  const inputRe = /<input\b([^>]*?)\/?>/gi;
+  let m;
+  while ((m = inputRe.exec(html))) {
+    const a = parseAttrs(m[1]);
+    const type = (a['type'] ?? 'text').toLowerCase();
+    if (!['submit', 'button', 'reset'].includes(type)) continue;
+    const form = formAt(m.index);
+    controls.push({
+      id: a['id'] || `input-${index++}`,
+      tag: 'input',
+      type,
+      label: a['value'] || (type === 'submit' ? 'Submit' : type === 'reset' ? 'Reset' : ''),
+      name: a['name'] ?? '',
+      action: form?.action ?? '',
+      method: form?.method ?? 'GET',
+      disabled: isDisabled(a),
+      hidden: isMarkedHidden(a),
+      bounds: parseBounds(a),
+    });
+  }
+
+  const buttonRe = /<button\b([^>]*)>([\s\S]*?)<\/button>/gi;
+  while ((m = buttonRe.exec(html))) {
+    const a = parseAttrs(m[1]);
+    const type = (a['type'] ?? 'submit').toLowerCase();
+    const form = formAt(m.index);
+    controls.push({
+      id: a['id'] || `button-${index++}`,
+      tag: 'button',
+      type,
+      label: stripTags(m[2]).trim(),
+      name: a['name'] ?? '',
+      action: form?.action ?? '',
+      method: form?.method ?? 'GET',
+      disabled: isDisabled(a),
+      hidden: isMarkedHidden(a),
+      bounds: parseBounds(a),
+    });
+  }
+
+  const linkRe = /<a\b([^>]*)>([\s\S]*?)<\/a>/gi;
+  while ((m = linkRe.exec(html))) {
+    const a = parseAttrs(m[1]);
+    if (!a['href']) continue;
+    controls.push({
+      id: a['id'] || `link-${index++}`,
+      tag: 'a',
+      type: 'link',
+      label: stripTags(m[2]).trim(),
+      name: a['name'] ?? '',
+      href: a['href'],
+      method: 'GET',
+      disabled: isDisabled(a),
+      hidden: isMarkedHidden(a),
+      bounds: parseBounds(a),
+    });
+  }
+
+  return controls;
+}
+
 const BLOCK_CLOSERS =
   /<\/(p|div|li|h1|h2|h3|h4|h5|h6|tr|section|article|header|footer|nav|ul|ol|table|form|label|fieldset|dt|dd|dl|blockquote|pre)>/gi;
 
