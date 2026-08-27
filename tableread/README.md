@@ -20,7 +20,8 @@ point is never averaging the two away.
   persona's surfaces as visible text, check the verbatim truths.
 - `primitives.mjs` + `recipes/` — the product adapter (currently: Fireside)
   and the fixture scripts. Adapting tableread to another product means
-  rewriting these two, nothing else.
+  rewriting these two, nothing else. The adapter exports `createWorld`
+  (legacy name `createSagaWorld` accepted).
 - `--adapter=<dir>` (both runners; env `TABLEREAD_ADAPTER` also works) points
   at another product's adapter directory — its own `primitives.mjs`,
   `recipes/`, and `scenes.json` — instead of the built-in Fireside one.

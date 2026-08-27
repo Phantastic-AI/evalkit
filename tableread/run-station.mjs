@@ -35,7 +35,12 @@ async function main() {
   const adapterDir = resolve(
     adapterArg ? adapterArg.slice('--adapter='.length) : process.env.TABLEREAD_ADAPTER || HERE
   );
-  const { createSagaWorld, STAGING_BASE_URL } = await import(pathToFileURL(resolve(adapterDir, 'primitives.mjs')).href);
+  const adapterModule = await import(pathToFileURL(resolve(adapterDir, 'primitives.mjs')).href);
+  const { STAGING_BASE_URL } = adapterModule;
+  const createWorld = adapterModule.createWorld ?? adapterModule.createSagaWorld;
+  if (!createWorld) {
+    throw new Error('adapter must export createWorld (or legacy createSagaWorld)');
+  }
   const baseUrl = baseUrlArg ? baseUrlArg.slice('--base-url='.length) : STAGING_BASE_URL;
   const recipeArg = args.find((a) => !a.startsWith('--'));
   if (!recipeArg) {
@@ -52,7 +57,7 @@ async function main() {
   }
 
   console.log(`saga: running ${recipeName} against ${baseUrl}`);
-  const p = createSagaWorld(baseUrl);
+  const p = createWorld(baseUrl);
   const { surfaces } = await recipe({ p });
   if (!p.world.slug) throw new Error(`${recipeName} finished without creating a conference (world.slug is unset)`);
   if (!Array.isArray(surfaces) || surfaces.length === 0) {

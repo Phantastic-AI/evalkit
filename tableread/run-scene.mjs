@@ -69,7 +69,12 @@ async function main() {
   const adapterDir = resolve(
     adapterArg ? adapterArg.slice('--adapter='.length) : process.env.TABLEREAD_ADAPTER || HERE
   );
-  const { createSagaWorld, STAGING_BASE_URL } = await import(pathToFileURL(resolve(adapterDir, 'primitives.mjs')).href);
+  const adapterModule = await import(pathToFileURL(resolve(adapterDir, 'primitives.mjs')).href);
+  const { STAGING_BASE_URL } = adapterModule;
+  const createWorld = adapterModule.createWorld ?? adapterModule.createSagaWorld;
+  if (!createWorld) {
+    throw new Error('adapter must export createWorld (or legacy createSagaWorld)');
+  }
   const baseUrl = baseUrlArg ? baseUrlArg.slice('--base-url='.length) : STAGING_BASE_URL;
   const scenesArg = args.find((a) => a.startsWith('--scenes='));
   const scenesPath = resolve(adapterDir, scenesArg ? scenesArg.slice('--scenes='.length) : 'scenes.json');
@@ -91,7 +96,7 @@ async function main() {
   console.log(`saga: running scene ${sceneId} ("${scene.title}") via recipes/${recipeName}.mjs against ${baseUrl}`);
 
   const shots = [];
-  const p = createSagaWorld(baseUrl);
+  const p = createWorld(baseUrl);
 
   /** Capture one surface right now, tagged with whichever scene it belongs
    *  to — a recipe covering several scenes calls this once per scene, at
