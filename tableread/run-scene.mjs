@@ -1,5 +1,9 @@
 #!/usr/bin/env node
-// CLI: node run-scene.mjs <sceneId> [--scenes=<path>] [--teardown] [--keep] [--base-url=<url>]
+// CLI: node run-scene.mjs <sceneId> [--scenes=<path>] [--teardown] [--keep] [--base-url=<url>] [--adapter=<dir>]
+//
+// --adapter=<dir> (or env TABLEREAD_ADAPTER) points primitives.mjs, recipes/,
+// and the default scenes.json at another product's adapter directory instead
+// of this one's built-in Fireside adapter — see README.md's adapter contract.
 //
 // Scene-driven counterpart to run-station.mjs. A scene (tools/saga/scenes.json)
 // names a fixtureRecipe — either a recipes/*.mjs file, or 'reuse:<sceneId>'
@@ -26,13 +30,14 @@
 import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { createSagaWorld, STAGING_BASE_URL } from './primitives.mjs';
 import { capture } from './capture.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
 function usage() {
-  console.error('usage: node run-scene.mjs <sceneId> [--scenes=<path>] [--teardown] [--keep] [--base-url=<url>]');
+  console.error(
+    'usage: node run-scene.mjs <sceneId> [--scenes=<path>] [--teardown] [--keep] [--base-url=<url>] [--adapter=<dir>]'
+  );
 }
 
 function loadScenes(path) {
@@ -60,9 +65,14 @@ async function main() {
   const args = process.argv.slice(2);
   const teardown = args.includes('--teardown');
   const baseUrlArg = args.find((a) => a.startsWith('--base-url='));
+  const adapterArg = args.find((a) => a.startsWith('--adapter='));
+  const adapterDir = resolve(
+    adapterArg ? adapterArg.slice('--adapter='.length) : process.env.TABLEREAD_ADAPTER || HERE
+  );
+  const { createSagaWorld, STAGING_BASE_URL } = await import(pathToFileURL(resolve(adapterDir, 'primitives.mjs')).href);
   const baseUrl = baseUrlArg ? baseUrlArg.slice('--base-url='.length) : STAGING_BASE_URL;
   const scenesArg = args.find((a) => a.startsWith('--scenes='));
-  const scenesPath = resolve(HERE, scenesArg ? scenesArg.slice('--scenes='.length) : 'scenes.json');
+  const scenesPath = resolve(adapterDir, scenesArg ? scenesArg.slice('--scenes='.length) : 'scenes.json');
   const sceneId = args.find((a) => !a.startsWith('--'));
   if (!sceneId) {
     usage();
@@ -73,7 +83,7 @@ async function main() {
   const scene = byId.get(sceneId);
   if (!scene) throw new Error(`No scene "${sceneId}" in ${scenesPath}`);
   const recipeName = resolveRecipeName(scene, byId);
-  const recipePath = resolve(HERE, 'recipes', `${recipeName}.mjs`);
+  const recipePath = resolve(adapterDir, 'recipes', `${recipeName}.mjs`);
   const mod = await import(pathToFileURL(recipePath).href);
   const recipe = mod.default;
   if (typeof recipe !== 'function') throw new Error(`recipes/${recipeName}.mjs has no default-exported function`);

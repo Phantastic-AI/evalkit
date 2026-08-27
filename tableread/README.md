@@ -21,6 +21,11 @@ point is never averaging the two away.
 - `primitives.mjs` + `recipes/` — the product adapter (currently: Fireside)
   and the fixture scripts. Adapting tableread to another product means
   rewriting these two, nothing else.
+- `--adapter=<dir>` (both runners; env `TABLEREAD_ADAPTER` also works) points
+  at another product's adapter directory — its own `primitives.mjs`,
+  `recipes/`, and `scenes.json` — instead of the built-in Fireside one.
+  Example: `node run-scene.mjs --adapter=/path/to/superpowers-app/evals <scene-id>`.
+  Omit it and behavior is unchanged: the built-in Fireside adapter, as before.
 - Comprehension grading — the goldfish — lives in its own repo (`goldfish`):
   a calibrated-ignorant small model reads each captured surface cold and is
   graded against the scene's declared intents.

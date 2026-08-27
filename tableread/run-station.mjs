@@ -1,5 +1,9 @@
 #!/usr/bin/env node
-// CLI: node run-station.mjs recipes/<name>.mjs [--teardown] [--keep]
+// CLI: node run-station.mjs recipes/<name>.mjs [--teardown] [--keep] [--adapter=<dir>]
+//
+// --adapter=<dir> (or env TABLEREAD_ADAPTER) points primitives.mjs at
+// another product's adapter directory instead of this one's built-in
+// Fireside adapter — see README.md's adapter contract.
 //
 // Runs a recipe (a default-exported async ({p}) => {...} that composes
 // primitives.mjs into a fixture and returns { surfaces: [{persona, url}] }),
@@ -13,19 +17,25 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { basename, dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { createSagaWorld, STAGING_BASE_URL } from './primitives.mjs';
 import { capture } from './capture.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
 function usage() {
-  console.error('usage: node run-station.mjs recipes/<name>.mjs [--teardown] [--keep] [--base-url=<url>]');
+  console.error(
+    'usage: node run-station.mjs recipes/<name>.mjs [--teardown] [--keep] [--base-url=<url>] [--adapter=<dir>]'
+  );
 }
 
 async function main() {
   const args = process.argv.slice(2);
   const teardown = args.includes('--teardown');
   const baseUrlArg = args.find((a) => a.startsWith('--base-url='));
+  const adapterArg = args.find((a) => a.startsWith('--adapter='));
+  const adapterDir = resolve(
+    adapterArg ? adapterArg.slice('--adapter='.length) : process.env.TABLEREAD_ADAPTER || HERE
+  );
+  const { createSagaWorld, STAGING_BASE_URL } = await import(pathToFileURL(resolve(adapterDir, 'primitives.mjs')).href);
   const baseUrl = baseUrlArg ? baseUrlArg.slice('--base-url='.length) : STAGING_BASE_URL;
   const recipeArg = args.find((a) => !a.startsWith('--'));
   if (!recipeArg) {
