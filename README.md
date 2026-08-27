@@ -27,7 +27,7 @@ you need to see.
 2. **Scenes become worlds.** An adapter drives your app's real forms on
    staging (sign up, create, submit, assign) to build each scene's state.
    No mocks, no database seeding: the world exists because the product's
-   own front door built it.
+   real screens built it, the same way a user would have.
 3. **Worlds become captures.** The runner reads every character's screens
    as rendered text (links and buttons marked) and stores them beside the
    scene.

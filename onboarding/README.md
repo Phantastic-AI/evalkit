@@ -33,10 +33,10 @@ before the chain continues.
 
 **02-stations.md** — Each story broken into stations: concrete moments
 with a buildable world state. Per station: person, moment, the numbered
-front-door steps that would build it on staging (name real forms and
+real-flow steps that would build it on staging (name real forms and
 fields by reading the code or the pages, never invent), the screens each
 persona would read, and the facts a read must confirm. A station whose
-fixture cannot be built through the front door is recorded with the reason
+fixture cannot be built through the real screens is recorded with the reason
 — that is a finding about the product, not a gap in the doc.
 
 **03-adapter.md + primitives** — The adapter plan, then the code: copy

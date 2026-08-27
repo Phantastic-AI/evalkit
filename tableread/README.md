@@ -16,7 +16,7 @@ point is never averaging the two away.
 - `render-screenplay.mjs` — renders scenes into `SCREENPLAY.md`, the
   human-readable script. Generated; never hand-edited.
 - `run-scene.mjs` / `run-station.mjs` — build a scene's world through the
-  product's own front door (against a staging deployment), capture every
+  product's own real screens (against a staging deployment), capture every
   persona's surfaces as visible text, check the verbatim truths.
 - `primitives.mjs` + `recipes/` — the product adapter (currently: Fireside)
   and the fixture scripts. Adapting tableread to another product means
