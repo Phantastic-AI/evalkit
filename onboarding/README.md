@@ -81,7 +81,10 @@ regressed scene blocks the change until a human rules otherwise.
 
 - Staging only. Invented identities only, stamped per run.
 - Fixture worlds carry a grep-able slug prefix so cleanup is safe.
-- The goldfish gets nothing beyond the persona line.
+- Worlds are built once and played in; scenarios start from stations,
+  never from an empty database.
+- The goldfish gets nothing beyond the persona line, and reads pixels at
+  a declared viewport — never a DOM or text dump.
 - Ghosts (vocabulary for unbuilt features) are graded as expected
   absences, never claimed as features.
 - The two grades are never averaged.

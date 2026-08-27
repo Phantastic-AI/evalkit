@@ -94,9 +94,12 @@ Controls that matter, in order:
    model to read (step 07), no model at all for 06. Never the reverse.
 2. **Reuse worlds.** Consecutive scenes on one timeline share one fixture;
    the reference suite builds five worlds for 26 scenes, not 26.
-3. **Text before pixels.** Text reads catch copy diseases at the lowest
-   price; add screenshot reads (vision tokens cost more) only where layout
-   is the suspect.
+3. **Lanes are the vision knob.** The goldfish reads screenshots at a
+   declared viewport — a text dump would list every control including
+   what's below the fold, a route map no human gets. Control vision cost
+   by lanes, not by leaking text to the reader: desktop always; add
+   mobile, iPad, or superwide lanes only where a scene declares them.
+   Truth checks stay text — mechanical string matches, free.
 4. **Scope hats.** Every scene gets the novice; give the pro hat only to
    scenes that declare it — absence-spotting is not needed on every screen.
 5. **Cap the blast radius.** Grade the scenes whose surfaces a change
