@@ -1,10 +1,15 @@
 # Onboarding: point evalkit at your app
 
-A numbered artifact chain. Each step produces one file in YOUR product
-repo under `docs/evalkit/`, named exactly as below. Do the steps in order;
-a step's output is the next step's input. An agent runs this end to end;
-a human rules where marked. Kick off with
-[STARTER_PROMPT.md](STARTER_PROMPT.md).
+**Your job, whole:** turn your product's user stories into a running,
+graded suite. You will write nine documents in order, write the adapter
+code the middle steps call for, then run the suite and grade it — steps
+06 through 08 are the payoff; everything before them exists so they can
+run. When 08 exists and both scorecards have numbers, you are done.
+
+Each step produces one file in YOUR product repo under `docs/evalkit/`,
+named exactly as below. Do the steps in order; a step's output is the
+next step's input. An agent runs this end to end; a human rules where
+marked. Kick off with [STARTER_PROMPT.md](STARTER_PROMPT.md).
 
 ## Prerequisites
 
@@ -88,3 +93,13 @@ regressed scene blocks the change until a human rules otherwise.
 - Ghosts (vocabulary for unbuilt features) are graded as expected
   absences, never claimed as features.
 - The two grades are never averaged.
+
+## When you finish
+
+You have: docs 00–08 in your repo, a working adapter and recipes in the
+suite directory, captures beside every scene, and two scorecards —
+capability and comprehension — with a ranked findings list. That is the
+deliverable; the documents are the trail that makes it reproducible.
+From here the suite is a ratchet: rerun 06+07 after any change to a
+surface a scene reads, and treat a regressed scene as blocking until a
+human rules otherwise.

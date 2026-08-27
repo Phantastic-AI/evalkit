@@ -32,4 +32,9 @@ The laws in onboarding/README.md bind throughout. When a fixture cannot
 be built or a truth comes out false, that is a finding to record, not an
 obstacle to code around.
 
+You are done when docs 00–08 exist, the suite runs against staging, and
+both scorecards — capability and comprehension — have numbers with a
+ranked findings list. The documents are the trail; the graded suite is
+the deliverable.
+
 ---
